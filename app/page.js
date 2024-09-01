@@ -72,6 +72,7 @@ export default function Home() {
               8 Words, 15 Chances. Can You Guess It?
             </Typography>
 
+            <SignedOut>
             <Button 
               href="/sign-in"
               variant="contained" 
@@ -99,6 +100,7 @@ export default function Home() {
               }}>
                 Log In
             </Button>
+            </SignedOut>
 
             <Button 
               variant="contained" 
