@@ -1,5 +1,5 @@
 import { OpenAI } from 'openai';
-import { collection, addDoc, query, where, getDocs } from "firebase/firestore";
+import { collection, addDoc, getDocs } from "firebase/firestore";
 import { db } from "../../../firebase";
 
 // Initialize the OpenAI client
@@ -37,7 +37,7 @@ export async function POST(req) {
         usedWords.add(normalizedWord);  // Add to the set of used words
         generatedWordsList.push({
           word: normalizedWord,
-          clues: generatedWord.clues,
+          clues: generatedWord.clues.slice(0, 15),  // Ensure exactly 15 clues are used
         });
       } else {
         console.log(`Word "${normalizedWord}" already exists in Firestore or the current list. Generating a new word...`);
@@ -60,10 +60,10 @@ export async function POST(req) {
 
 function generatePrompt() {
   return `Generate a word that represents a commonly recognized object, concept, or item (e.g., apple, river, chair) that is simple yet challenging to guess.
-  For this word, generate 5 clues that are directly related to the word (e.g., 'fruit' for 'apple', 'water' for 'river'). 
+  For this word, generate 15 clues that are directly related to the word (e.g., 'fruit' for 'apple', 'water' for 'river'). 
   The clues should be single words that are closely related to the word but not overly obvious.
   Ensure that the word or any of the clues do not contain any commas.
-  Format the response as plain JSON with the word having a "word" key and a "clues" key that contains an array of 5 single-word clues.
+  Format the response as plain JSON with the word having a "word" key and a "clues" key that contains an array of 15 single-word clues.
   Do not include any code blocks or backticks.`;
 }
 
@@ -74,9 +74,11 @@ function parseOpenAIResponse(choices) {
     try {
       const data = JSON.parse(cleanedContent);
       if (data && data.word && data.clues) {
+        // Truncate clues if there are more than 15
+        const truncatedClues = data.clues.slice(0, 15);
         return {
           word: data.word,
-          clues: data.clues,
+          clues: truncatedClues,
         };
       } else {
         console.warn("Incomplete data received, retrying...");

@@ -53,7 +53,7 @@ export default function Admin() {
   return (
     <div style={{ padding: '20px', position: 'relative' }}>
       <div style={{ position: 'absolute', top: '20px', right: '20px', fontSize: '18px', fontWeight: 'bold' }}>
-        Word Count: {wordCount}
+        List Count: {wordCount}
       </div>
       <h1>Admin Page</h1>
       <p>Click the button below to generate new words and clues.</p>
