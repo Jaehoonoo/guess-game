@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { db } from "../../firebase";  // Correct path to Firebase configuration
 
 export default function Admin() {
   const [message, setMessage] = useState('');
@@ -49,6 +51,8 @@ export default function Admin() {
       setClearing(false);
     }
   };
+
+
 
   return (
     <div style={{ padding: '20px', position: 'relative' }}>
