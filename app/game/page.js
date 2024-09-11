@@ -25,6 +25,8 @@ export default function Game() {
   useEffect(() => {
     if (user) {
       checkIfUserCanPlay();
+    } else {
+      startGame();
     }
   }, [user]);
 
@@ -48,11 +50,33 @@ export default function Game() {
   };
 
   const startGame = async () => {
+    const today = new Date().toISOString().slice(0, 10);  // Get today's date
+  
+    // For signed-in users
+    if (user) {
+      try {
+        const response = await axios.post('/api/check-user-play', { userId: user.id });
+        if (!response.data.playable) {
+          setGamePlayable(false);
+          return;
+        }
+      } catch (error) {
+        console.error("Error checking last played date for signed-in user:", error);
+      }
+    } else {
+      // For anonymous users
+      const lastPlayedDate = localStorage.getItem('lastPlayedDate');
+      if (lastPlayedDate === today) {
+        setGamePlayable(false);
+        return;
+      }
+    }
+  
+    // Fetch word set of the day
     try {
       const response = await axios.get('/api/start-game');
-
       if (response.data && response.data.clues && response.data.clues.length > 0) {
-        setClues(response.data.clues); // Set clues if available
+        setClues(response.data.clues);  // Set clues if available
         setCurrentWordIndex(0);
         setCurrentClueIndex(0);
         setCurrentGuess('');
@@ -70,16 +94,30 @@ export default function Game() {
       console.error("Error fetching word set:", error);
     }
   };
+  
 
   const saveLastPlayedDate = async () => {
-    try {
-      await axios.post('/api/save-last-played', { userId: user.id });
-    } catch (error) {
-      console.error("Error saving last played date:", error);
+    const today = new Date().toISOString().slice(0, 10);  // Get today's date
+  
+    // For signed-in users
+    if (user) {
+      try {
+        await axios.post('/api/save-last-played', { userId: user.id });
+      } catch (error) {
+        console.error("Error saving last played date for signed-in user:", error);
+      }
+    } else {
+      // For anonymous users, store in localStorage
+      localStorage.setItem('lastPlayedDate', today);
     }
   };
-
+  
   const handleGuess = async () => {
+    if (clues.length === 0 || !clues[currentWordIndex]?.word) {
+      console.error("No clues or invalid currentWordIndex");
+      return;
+    }
+  
     const currentWord = clues[currentWordIndex].word;
     const normalizedGuess = currentGuess.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
     const normalizedWord = currentWord.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
@@ -88,15 +126,15 @@ export default function Game() {
       guess: normalizedGuess,
       word: normalizedWord,
     });
-
+  
     if (guessResponse.data.result === 'correct') {
       setResult('Correct');
       const newGuessedWords = [...guessedWords];
       newGuessedWords[currentWordIndex] = currentWord;
       setGuessedWords(newGuessedWords);
-
+  
       setTotalCluesUsed((prev) => prev + 1);
-
+  
       if (currentWordIndex < clues.length - 1) {
         setCurrentWordIndex(currentWordIndex + 1);
         setCurrentClueIndex(0);
@@ -104,7 +142,7 @@ export default function Game() {
       } else {
         setIsGameOver(true);
         setResult('You have guessed all the words correctly!');
-        await saveLastPlayedDate();
+        await saveLastPlayedDate();  // Save the date after the game is complete
         setGamePlayable(false);
       }
     } else {
@@ -115,12 +153,13 @@ export default function Game() {
       } else {
         setResult('No more clues available for this word.');
         setIsGameOver(true);
-        await saveLastPlayedDate();
+        await saveLastPlayedDate();  // Save the date if the game is over
         setGamePlayable(false);
       }
     }
     setCurrentGuess('');
   };
+  
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && !isGameOver && gamePlayable) {
@@ -169,7 +208,7 @@ export default function Game() {
           <div className={styles.gameArea}>
             <div>Clue:</div>
             <div className={styles.clue}>
-              {clues.length > 0 && clues[currentWordIndex]?.clues ? clues[currentWordIndex.clues[currentClueIndex]] : 'Loading...'}
+              {clues.length > 0 && clues[currentWordIndex]?.clues ? clues[currentWordIndex].clues[currentClueIndex] : 'Loading...'}
             </div>
 
             <TextField
