@@ -96,6 +96,22 @@ export default function Game() {
     }
   }, []);
 
+  useEffect(() => {
+    const savedGameState = JSON.parse(localStorage.getItem('gameState'));
+    if (savedGameState && !isGameOver) {
+      setGuessedWords(savedGameState.guessedWords);
+      setCurrentWordIndex(savedGameState.currentWordIndex);
+      setCurrentClueIndex(savedGameState.currentClueIndex);
+      setCurrentGuess(savedGameState.currentGuess);
+      setTotalCluesUsed(savedGameState.totalCluesUsed);
+      setCount(savedGameState.count);
+      setNumCorrect(savedGameState.numCorrect);
+      setTime(savedGameState.time);
+      setActiveSegments(savedGameState.activeSegments);
+      setCluesUsed(savedGameState.cluesUsed);
+    }
+  }, []);
+
   // useEffect(() => {
   //   const circle = document.getElementById('circle');
   //   const totalTicks = 8; // Number of ticks you want around the circle
@@ -119,6 +135,27 @@ export default function Game() {
   // }, []);
 
   const startGame = async () => {
+    // restore the game state from localstorage if it exists
+    const savedGameState = JSON.parse(localStorage.getItem('gameState'));
+    if (savedGameState && !savedGameState.isGameOver) {
+      if (savedGameState.clues && savedGameState.clues.length > 0) {
+        setGuessedWords(savedGameState.guessedWords);
+        setCurrentWordIndex(savedGameState.currentWordIndex);
+        setCurrentClueIndex(savedGameState.currentClueIndex);
+        setCurrentGuess(savedGameState.currentGuess);
+        setTotalCluesUsed(savedGameState.totalCluesUsed);
+        setCount(savedGameState.count);
+        setNumCorrect(savedGameState.numCorrect);
+        setTime(savedGameState.time);
+        setActiveSegments(savedGameState.activeSegments);
+        setCluesUsed(savedGameState.cluesUsed);
+        setClues(savedGameState.clues)
+        return;
+      } else {
+        console.error("No clues available in the saved game state.");
+      }
+    }
+
     // For signed-in users
     if (isSignedIn) {
       try {
@@ -160,6 +197,8 @@ export default function Game() {
     setCount(15); // Reset clue countdown 
     setNumCorrect(0);
     setLastDatePlayed(date);
+
+    saveGameState(); // save initial game state
   };
 
   const getUserData = async (u) => {
@@ -237,6 +276,23 @@ export default function Game() {
     }
   };
 
+  const saveGameState = () => {
+    const gameState = {
+      guessedWords,
+      currentWordIndex,
+      currentClueIndex,
+      currentGuess,
+      totalCluesUsed,
+      count,
+      numCorrect,
+      time,
+      activeSegments,
+      cluesUsed,
+      clues
+    };
+    localStorage.setItem('gameState', JSON.stringify(gameState));
+  }
+
   const handleGuess = async () => {
     // Check if the text field is empty
     if (currentGuess.trim() === '') {
@@ -252,7 +308,11 @@ export default function Game() {
       return; // Exit the function early if no input
     }
 
-    const currentWord = clues[currentWordIndex].word;
+    const currentWord = clues[currentWordIndex]?.word;
+    if (!currentWord) {
+      console.error("No current word available");
+      return;
+    }
 
     setTotalCluesUsed((prev) => prev + 1);  // Increment total clues used
 
@@ -348,6 +408,8 @@ export default function Game() {
     }
     setCurrentGuess('');
 
+    saveGameState();
+
   };
 
   const handleKeyPress = (e) => {
@@ -421,7 +483,7 @@ export default function Game() {
     // else {
 
     // }
-    
+    localStorage.removeItem('gameState');
     return;
   }
 
