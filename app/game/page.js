@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect} from 'react';
+import { useState, useEffect, useRef} from 'react';
 import axios from 'axios';
 import styles from './Game.module.css';  // Import the CSS module
 import { SignedIn, SignedOut, SignOutButton, UserButton } from '@clerk/nextjs';
@@ -40,6 +40,7 @@ export default function Game() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [numCorrect, setNumCorrect] = useState(0);
+  const hasMounted = useRef(false);
   
   //userdata
   const { userId, isSignedIn } = useAuth();
@@ -89,7 +90,10 @@ export default function Game() {
   const [activeSegments, setActiveSegments] = useState(Array(8).fill(false));
 
   useEffect(() => {
-    startGame();
+    if (!hasMounted.current) {
+      startGame();
+      hasMounted.current = true; // Ensure the function runs only once
+    }
     if (isSignedIn) {
       createUserData(userId);
       getUserData(userId);
