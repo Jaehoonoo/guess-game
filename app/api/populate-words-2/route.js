@@ -11,15 +11,22 @@ const openai = new OpenAI({
 export async function POST(req) {
   try {
     const wordsCollection = collection(db, "words");
+    const dailyWordsetsCollection = collection(db, 'dailyWordsets')
 
     const usedWords = [];
 
-    // Fetch all existing words in Firestore
+    // Fetch all existing words in Firestore (words and dailyWordSets)
     const allWordsSnapshot = await getDocs(wordsCollection);
+    const dailyWordsetsSnapshot = await getDocs(dailyWordsetsCollection)
     allWordsSnapshot.forEach((doc) => {
       const wordsData = doc.data().words;
       wordsData.forEach(word => usedWords.push(word.word.toLowerCase()));
     });
+
+    dailyWordsetsSnapshot.forEach((doc) => {
+      const wordsData = doc.data().words;
+      wordsData.forEach(word => usedWords.push(word.word.toLowerCase()));
+    })
 
     console.log(usedWords)
 
