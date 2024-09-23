@@ -496,7 +496,7 @@ const saveGameState = () => {
     // else {
 
     // }
-    localStorage.removeItem('gameState');
+    localStorage.removeItem('gameState'); // Instead of removing gameState at endGame, we remove at new day local to player
     return;
   }
 
