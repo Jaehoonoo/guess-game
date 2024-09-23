@@ -97,8 +97,10 @@ export default function Game() {
   }, []);
 
   useEffect(() => {
+    const todayDate = new Date().toLocaleDateString('en-CA');
     const savedGameState = JSON.parse(localStorage.getItem('gameState'));
-    if (savedGameState && !isGameOver) {
+
+    if (savedGameState && savedGameState.date === todayDate && !savedGameState.isGameOver) {
       setGuessedWords(savedGameState.guessedWords);
       setCurrentWordIndex(savedGameState.currentWordIndex);
       setCurrentClueIndex(savedGameState.currentClueIndex);
@@ -109,6 +111,8 @@ export default function Game() {
       setTime(savedGameState.time);
       setActiveSegments(savedGameState.activeSegments);
       setCluesUsed(savedGameState.cluesUsed);
+    } else {
+      localStorage.removeItem('gameState');
     }
   }, []);
 
@@ -135,9 +139,9 @@ export default function Game() {
   // }, []);
 
   const startGame = async () => {
-    // restore the game state from localstorage if it exists
+    const todayDate = new Date().toLocaleDateString('en-CA');
     const savedGameState = JSON.parse(localStorage.getItem('gameState'));
-    if (savedGameState && !savedGameState.isGameOver) {
+    if (savedGameState && savedGameState.date === todayDate && !savedGameState.isGameOver) {
       if (savedGameState.clues && savedGameState.clues.length > 0) {
         setGuessedWords(savedGameState.guessedWords);
         setCurrentWordIndex(savedGameState.currentWordIndex);
@@ -154,6 +158,8 @@ export default function Game() {
       } else {
         console.error("No clues available in the saved game state.");
       }
+    } else {
+      localStorage.removeItem('gameState');
     }
 
     // For signed-in users
@@ -276,22 +282,27 @@ export default function Game() {
     }
   };
 
-  const saveGameState = () => {
-    const gameState = {
-      guessedWords,
-      currentWordIndex,
-      currentClueIndex,
-      currentGuess,
-      totalCluesUsed,
-      count,
-      numCorrect,
-      time,
-      activeSegments,
-      cluesUsed,
-      clues
-    };
-    localStorage.setItem('gameState', JSON.stringify(gameState));
-  }
+  // Inside your Game component
+
+const saveGameState = () => {
+  const gameState = {
+    guessedWords,
+    currentWordIndex,
+    currentClueIndex,
+    currentGuess,
+    totalCluesUsed,
+    count,
+    numCorrect,
+    time,
+    activeSegments,
+    cluesUsed,
+    clues,
+    date: new Date().toLocaleDateString('en-CA'), // Add this line
+    isGameOver,
+  };
+  localStorage.setItem('gameState', JSON.stringify(gameState));
+};
+
 
   const handleGuess = async () => {
     // Check if the text field is empty
@@ -463,7 +474,9 @@ export default function Game() {
     }
 
     setIsGameOver(true);
-    localStorage.setItem('lastDatePlayed', date);
+    const todayDate = new Date().toLocaleDateString('en-CA');
+    setLastDatePlayed(todayDate);
+    localStorage.setItem('lastDatePlayed', todayDate);
 
     // Increment user's total games played
     setGamesPlayed((prevGamesPlayed) => prevGamesPlayed + 1)
