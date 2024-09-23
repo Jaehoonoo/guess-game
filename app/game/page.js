@@ -41,6 +41,7 @@ export default function Game() {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [numCorrect, setNumCorrect] = useState(0);
   const hasMounted = useRef(false);
+  const [endGameModal, setEndGameModal] = useState(false);
   
   //userdata
   const { userId, isSignedIn } = useAuth();
@@ -89,11 +90,10 @@ export default function Game() {
 
   const [activeSegments, setActiveSegments] = useState(Array(8).fill(false));
 
+  
   useEffect(() => {
-    if (!hasMounted.current) {
-      startGame();
-      hasMounted.current = true; // Ensure the function runs only once
-    }
+
+    startGame()
     if (isSignedIn) {
       createUserData(userId);
       getUserData(userId);
@@ -145,7 +145,7 @@ export default function Game() {
         return;
       }
     }
-
+    
     const response = await axios.get('/api/start-game');
     setClues(response.data.clues);
     setCurrentWordIndex(0);
@@ -164,6 +164,7 @@ export default function Game() {
     setCount(15); // Reset clue countdown 
     setNumCorrect(0);
     setLastDatePlayed(date);
+    setCurrentStreak(0);
   };
 
   const getUserData = async (u) => {
@@ -390,7 +391,7 @@ export default function Game() {
       } else {
         setEndGameGuesses(`${14 - totalCluesUsed} guesses remaining`)
       }
-      handleOpen()
+      handleEndGameModalOpen()
       win() // Play win sound
     } else {
       setEndGameTitle('Next time!')
@@ -399,7 +400,7 @@ export default function Game() {
       // Sequentially reveal remaining words one by one using recursive setTimeout
       const revealWords = (index) => {
         if (index >= clues.length) {
-          handleOpen();
+          handleEndGameModalOpen();
           lose();
           return; // Stop when all words are revealed
         }
@@ -425,6 +426,7 @@ export default function Game() {
 
     }
 
+
     setIsGameOver(true);
     localStorage.setItem('lastDatePlayed', date);
 
@@ -439,14 +441,32 @@ export default function Game() {
     //update last date played
     console.log(lastDatePlayed)
 
+    //update streak
+    const lastDateArray = lastDatePlayed.split('-').map(Number);
+    const lastDate = new Date(lastDateArray[0], lastDateArray[1] - 1, lastDateArray[2]);
+    console.log('lastDate: ' + lastDate)
 
-    //validate for streak here
-    // if {
-    // }
-    // else {
+    const currentDate = new Date();
+    const currentDateOnly = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
+    console.log(currentDateOnly)
 
-    // }
+    const differenceInTime = currentDateOnly - lastDate;
+    const differenceInDays = differenceInTime / (1000 * 3600 * 24);
+    console.log('differenceInDays: ' + differenceInDays)
+
+    if (isWon) {
+
+      if ((lastDate == currentDateOnly) || (differenceInDays <= 1 && differenceInDays >= 0)) {
+        setCurrentStreak( (prevStreak) => prevStreak +1 )
+      }
+      else {
+        setCurrentStreak(0)
+      }
     
+    }
+
+    console.log(currentStreak)
+
     return;
   }
 
@@ -457,14 +477,22 @@ export default function Game() {
     }
   }, [isGameOver, isSignedIn]);
   
-
-  // for end game modal
   const handleOpen = () => {
     setOpen(true);
   };
   const handleClose = () => {
     setOpen(false);
   }
+
+  //endGameModal
+  const handleEndGameModalOpen = () => {
+    setEndGameModal(true);
+  }
+
+  const handleEndGameModalClose= () => {
+    setEndGameModal(false);
+  }
+
 
   const handleHelpOpen = () => { setIsHelpOpen(true) }
   const handleHelpClose = () => { setIsHelpOpen(false) }
@@ -834,8 +862,8 @@ export default function Game() {
 
       {/* Endgame Modal Win */}
       <Modal
-        open={open}
-        onClose={handleClose}
+        open={endGameModal}
+        onClose={handleEndGameModalClose}
         aria-labelledby="how-to-play-title"
         aria-describedby="how-to-play-description"
         sx = {{ 
@@ -968,7 +996,9 @@ export default function Game() {
       </Snackbar>
           </Box>
         </Modal>
-        
+      
+
+
         {/* How to Play Modal */}
         <Modal
           open={isHelpOpen}
