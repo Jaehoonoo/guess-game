@@ -455,7 +455,7 @@ export default function Game() {
     if (isGameOver && isSignedIn) {
       updateUserData(userId, gamesPlayed, gamesWon, currentStreak, lastDatePlayed)
     }
-  }, [isGameOver, isSignedIn]);
+  }, [userId, gamesPlayed, gamesWon, currentStreak, lastDatePlayed]);
   
 
   // for end game modal
