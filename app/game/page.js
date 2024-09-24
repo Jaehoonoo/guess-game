@@ -100,7 +100,7 @@ export default function Game() {
     const todayDate = new Date().toLocaleDateString('en-CA');
     const savedGameState = JSON.parse(localStorage.getItem('gameState'));
 
-    if (savedGameState && savedGameState.date === todayDate && !savedGameState.isGameOver) {
+    if (savedGameState && savedGameState.date === todayDate) {
       setGuessedWords(savedGameState.guessedWords);
       setCurrentWordIndex(savedGameState.currentWordIndex);
       setCurrentClueIndex(savedGameState.currentClueIndex);
@@ -111,53 +111,41 @@ export default function Game() {
       setTime(savedGameState.time);
       setActiveSegments(savedGameState.activeSegments);
       setCluesUsed(savedGameState.cluesUsed);
+      setIsGameOver(savedGameState.isGameOver);
+      setEndGameTitle(savedGameState.endGameTitle);
+      setEndGameGuesses(savedGameState.endGameGuesses);
+      setOpen(savedGameState.open);
     } else {
       localStorage.removeItem('gameState');
     }
   }, []);
 
-  // useEffect(() => {
-  //   const circle = document.getElementById('circle');
-  //   const totalTicks = 8; // Number of ticks you want around the circle
-  //   const radius = circle.offsetWidth * 0.48; // Adjust based on your circle size
-
-  //   for (let i = 0; i < totalTicks; i++) {
-  //     const tick = document.createElement('div');
-  //     tick.classList.add(styles.tick);
-
-  //     // Calculate the angle for each tick
-  //     const angle = (360 / totalTicks) * i;
-
-  //     // Position each tick based on its angle
-  //     tick.style.position = 'absolute'; // Make sure ticks are positioned relative to the circle
-  //     tick.style.transformOrigin = '0 0'; // Set the transform origin for correct positioning
-  //     tick.style.transform = `rotate(${angle}deg) translate(${radius}px)`; // Moves ticks outward by the radius
-
-  //     // Append each tick to the circle
-  //     circle.appendChild(tick);
-  //   }
-  // }, []);
+  useEffect(() => {
+    if (isGameOver) {
+      saveGameState();
+    }
+  }, [isGameOver]);
 
   const startGame = async () => {
     const todayDate = new Date().toLocaleDateString('en-CA');
     const savedGameState = JSON.parse(localStorage.getItem('gameState'));
-    if (savedGameState && savedGameState.date === todayDate && !savedGameState.isGameOver) {
-      if (savedGameState.clues && savedGameState.clues.length > 0) {
-        setGuessedWords(savedGameState.guessedWords);
-        setCurrentWordIndex(savedGameState.currentWordIndex);
-        setCurrentClueIndex(savedGameState.currentClueIndex);
-        setCurrentGuess(savedGameState.currentGuess);
-        setTotalCluesUsed(savedGameState.totalCluesUsed);
-        setCount(savedGameState.count);
-        setNumCorrect(savedGameState.numCorrect);
-        setTime(savedGameState.time);
-        setActiveSegments(savedGameState.activeSegments);
-        setCluesUsed(savedGameState.cluesUsed);
-        setClues(savedGameState.clues)
-        return;
-      } else {
-        console.error("No clues available in the saved game state.");
-      }
+    if (savedGameState && savedGameState.date === todayDate ) {
+      setGuessedWords(savedGameState.guessedWords);
+      setCurrentWordIndex(savedGameState.currentWordIndex);
+      setCurrentClueIndex(savedGameState.currentClueIndex);
+      setCurrentGuess(savedGameState.currentGuess);
+      setTotalCluesUsed(savedGameState.totalCluesUsed);
+      setCount(savedGameState.count);
+      setNumCorrect(savedGameState.numCorrect);
+      setTime(savedGameState.time);
+      setActiveSegments(savedGameState.activeSegments);
+      setCluesUsed(savedGameState.cluesUsed);
+      setClues(savedGameState.clues);
+      setIsGameOver(savedGameState.isGameOver);
+      setEndGameTitle(savedGameState.endGameTitle);
+      setEndGameGuesses(savedGameState.endGameGuesses);
+      setOpen(savedGameState.open);
+      return;
     } else {
       localStorage.removeItem('gameState');
     }
@@ -299,6 +287,9 @@ const saveGameState = () => {
     clues,
     date: new Date().toLocaleDateString('en-CA'), // Add this line
     isGameOver,
+    endGameTitle,
+    endGameGuesses,
+    open,
   };
   localStorage.setItem('gameState', JSON.stringify(gameState));
 };
@@ -473,7 +464,7 @@ const saveGameState = () => {
 
     }
 
-    setIsGameOver(true);
+    //setIsGameOver(true);
     const todayDate = new Date().toLocaleDateString('en-CA');
     setLastDatePlayed(todayDate);
     localStorage.setItem('lastDatePlayed', todayDate);
@@ -489,14 +480,8 @@ const saveGameState = () => {
     //update last date played
     console.log(lastDatePlayed)
 
-
-    //validate for streak here
-    // if {
-    // }
-    // else {
-
-    // }
-    localStorage.removeItem('gameState');
+    setIsGameOver(true);
+    
     return;
   }
 
